@@ -299,6 +299,7 @@ int nn_socket (int domain, int protocol)
 {
     int rc;
     int s;
+    int wants_name_service;
     struct nn_list_item *it;
     struct nn_socktype *socktype;
     struct nn_sock *sock;
@@ -316,7 +317,8 @@ int nn_socket (int domain, int protocol)
     nn_global_init ();
 
     /*  Only AF_SP and AF_SP_RAW domains are supported. */
-    if (nn_slow (domain != AF_SP && domain != AF_SP_RAW)) {
+    if (nn_slow (domain != AF_SP && domain != AF_SP_RAW &&
+          domain != AF_SP_TOPOLOGY)){
         nn_global_term ();
         nn_glock_unlock ();
         errno = EAFNOSUPPORT;
@@ -329,6 +331,13 @@ int nn_socket (int domain, int protocol)
         nn_glock_unlock ();
         errno = EMFILE;
         return -1;
+    }
+
+    if (domain == AF_SP_TOPOLOGY) {
+        domain = AF_SP;
+        wants_name_service = 1;
+    } else {
+        wants_name_service = 0;
     }
 
     /*  Find an empty socket slot. */
@@ -347,6 +356,9 @@ int nn_socket (int domain, int protocol)
             rc = nn_sock_init (sock, socktype);
             if (rc < 0)
                 goto error;
+
+            /*  Mark socket for name service usage  */
+            sock->wants_name_service = wants_name_service;
 
             /*  Adjust the global socket table. */
             self.socks [s] = sock;
@@ -418,7 +430,7 @@ int nn_setsockopt (int s, int level, int option, const void *optval,
 
     return 0;
 }
- 
+
 int nn_getsockopt (int s, int level, int option, void *optval,
     size_t *optvallen)
 {
@@ -735,7 +747,7 @@ int nn_recvmsg (int s, struct nn_msghdr *msghdr, int flags)
             /*  TODO: Copy the data to the supplied buffer, prefix them
                 with size. */
             nn_assert (0);
-        }   
+        }
     }
 
     nn_msg_term (&msg);
@@ -749,7 +761,7 @@ static void nn_global_add_transport (struct nn_transport *transport)
         transport->init ();
     nn_list_insert (&self.transports, &transport->item,
         nn_list_end (&self.transports));
-    
+
 }
 
 static void nn_global_add_socktype (struct nn_socktype *socktype)

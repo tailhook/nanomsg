@@ -84,6 +84,9 @@ struct nn_sock
 
     /*  Transport-specific socket options. */
     struct nn_optset *optsets [NN_MAX_TRANSPORT];
+
+    /*  Name service info  */
+    int wants_name_service;
 };
 
 /*  Initialise the socket. */
@@ -121,7 +124,7 @@ int nn_sock_recv (struct nn_sock *self, struct nn_msg *msg, int flags);
 
 /*  Set a socket option. */
 int nn_sock_setopt (struct nn_sock *self, int level, int option,
-    const void *optval, size_t optvallen); 
+    const void *optval, size_t optvallen);
 
 /*  Retrieve a socket option. This function is to be called from the API. */
 int nn_sock_getopt (struct nn_sock *self, int level, int option,

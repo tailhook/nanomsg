@@ -344,6 +344,7 @@ int nn_sock_getopt_inner (struct nn_sock *self, int level,
     if (level == NN_SOL_SOCKET) {
         switch (option) {
         case NN_DOMAIN:
+            // TODO(pc) check wants_name_service
             intval = self->socktype->domain;
             break;
         case NN_PROTOCOL:
