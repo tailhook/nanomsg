@@ -459,10 +459,16 @@ int nn_bind (int s, const char *addr)
 
     NN_BASIC_CHECKS;
 
-    rc = nn_global_create_ep (s, addr, 1);
-    if (rc < 0) {
-        errno = -rc;
+    if (self.socks [s]->wants_name_service) {
+        errno = ENOTSUP;
         return -1;
+    } else {
+        rc = nn_global_create_ep (s, addr, 1);
+        if (rc < 0) {
+            errno = -rc;
+            return -1;
+        }
+
     }
 
     return rc;
@@ -474,10 +480,14 @@ int nn_connect (int s, const char *addr)
 
     NN_BASIC_CHECKS;
 
-    rc = nn_global_create_ep (s, addr, 0);
-    if (rc < 0) {
-        errno = -rc;
-        return -1;
+    if (self.socks [s]->wants_name_service) {
+        nn_assert(("HELLO", 0));
+    } else {
+        rc = nn_global_create_ep (s, addr, 0);
+        if (rc < 0) {
+            errno = -rc;
+            return -1;
+        }
     }
 
     return rc;

@@ -58,6 +58,7 @@ typedef struct nn_options {
     int socket_type;
     struct nn_string_list bind_addresses;
     struct nn_string_list connect_addresses;
+    char *topology;
     float send_timeout;
     float recv_timeout;
     struct nn_string_list subscriptions;
@@ -193,6 +194,11 @@ struct nn_option nn_options[] = {
      NN_OPT_LIST_APPEND, offsetof (nn_options_t, connect_addresses), NULL,
      NN_MASK_ENDPOINT, NN_NO_CONFLICTS, NN_NO_REQUIRES,
      "Socket Options", "ADDR", "Connect socket to the address ADDR"},
+    {"topology", 0, NULL,
+     NN_OPT_STRING, offsetof (nn_options_t, topology), NULL,
+     NN_MASK_ENDPOINT, NN_MASK_ENDPOINT, NN_NO_REQUIRES,
+     "Socket Options", "NAME", "Use AF_SP_TOPOLOGY address family and "
+                               "connect to the address \"topology://NAME\""},
     {"bind-ipc", 'X' , NULL, NN_OPT_LIST_APPEND_FMT,
      offsetof (nn_options_t, bind_addresses), "ipc://%s",
      NN_MASK_ENDPOINT, NN_NO_CONFLICTS, NN_NO_REQUIRES,
@@ -332,8 +338,14 @@ int nn_create_socket (nn_options_t *options)
     int sock;
     int rc;
     int millis;
+    int family;
 
-    sock = nn_socket (AF_SP, options->socket_type);
+    if(options->topology) {
+        family = AF_SP_TOPOLOGY;
+    } else {
+        family = AF_SP;
+    }
+    sock = nn_socket (family, options->socket_type);
     nn_assert_errno (sock >= 0, "Can't create socket");
 
     /* Generic initialization */
@@ -426,14 +438,31 @@ void nn_connect_socket (nn_options_t *options, int sock)
 {
     int i;
     int rc;
+    char *addr;
+    int addr_len;
 
-    for (i = 0; i < options->bind_addresses.num; ++i) {
-        rc = nn_bind (sock, options->bind_addresses.items[i]);
-        nn_assert_errno (rc >= 0, "Can't bind");
-    }
-    for (i = 0; i < options->connect_addresses.num; ++i) {
-        rc = nn_connect (sock, options->connect_addresses.items[i]);
+    if (options->topology) {
+        addr_len = strlen (options->topology);
+        addr_len += strlen ("topology://");
+        addr_len += 1;
+        addr = malloc (addr_len);
+        alloc_assert (addr);
+        sprintf (addr, "topology://%s", options->topology);
+
+        rc = nn_connect (sock, addr);
         nn_assert_errno (rc >= 0, "Can't connect");
+
+        free (addr);
+
+    } else {
+        for (i = 0; i < options->bind_addresses.num; ++i) {
+            rc = nn_bind (sock, options->bind_addresses.items[i]);
+            nn_assert_errno (rc >= 0, "Can't bind");
+        }
+        for (i = 0; i < options->connect_addresses.num; ++i) {
+            rc = nn_connect (sock, options->connect_addresses.items[i]);
+            nn_assert_errno (rc >= 0, "Can't connect");
+        }
     }
 }
 
@@ -576,16 +605,17 @@ int main (int argc, char **argv)
 {
     int sock;
     nn_options_t options = {
-        0,
-        0,
-        {NULL, 0},
-        {NULL, 0},
-        -1.f,
-        -1.f,
-        {NULL, 0},
-        -1.f,
-        {NULL, 0},
-        NN_NO_ECHO
+        /* verbose */ 0,
+        /* socket_type */ 0,
+        /* bind_addresses */ {NULL, 0},
+        /* connect_addresses */ {NULL, 0},
+        /* topology */ NULL,
+        /* send_timeout */ -1.f,
+        /* recv_timeout */ -1.f,
+        /* subscriptions */ {NULL, 0},
+        /* send_interval */ -1.f,
+        /* data_to_send */ {NULL, 0},
+        /* echo_format */ NN_NO_ECHO
     };
 
     nn_parse_options (&nn_cli, &options, argc, argv);

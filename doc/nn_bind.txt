@@ -54,6 +54,8 @@ The syntax of the supplied address is invalid.
 The supplied address is too long.
 *EPROTONOSUPPORT*::
 The requested transport protocol is not supported.
+*ENOTSUP*::
+The sockets with AF_SP_TOPOLOGY address family do not support nn_bind.
 *EADDRNOTAVAIL*::
 The requested endpoint is not local.
 *ENODEV*::
