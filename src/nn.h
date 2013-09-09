@@ -292,6 +292,7 @@ NN_INLINE struct nn_cmsghdr *nn_cmsg_nexthdr_ (const struct nn_msghdr *mhdr,
 #define AF_SP 1
 #define AF_SP_RAW 2
 #define AF_SP_TOPOLOGY 3
+#define AF_SP_TOPOLOGY_RAW 4
 
 /*  Max size of an SP address.                                                */
 #define NN_SOCKADDR_MAX 128

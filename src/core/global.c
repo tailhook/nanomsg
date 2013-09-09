@@ -329,7 +329,7 @@ int nn_socket (int domain, int protocol)
 
     /*  Only AF_SP and AF_SP_RAW domains are supported. */
     if (nn_slow (domain != AF_SP && domain != AF_SP_RAW &&
-          domain != AF_SP_TOPOLOGY)){
+          domain != AF_SP_TOPOLOGY && domain != AF_SP_TOPOLOGY_RAW)){
         nn_global_term ();
         nn_glock_unlock ();
         errno = EAFNOSUPPORT;
@@ -346,6 +346,9 @@ int nn_socket (int domain, int protocol)
 
     if (domain == AF_SP_TOPOLOGY) {
         domain = AF_SP;
+        wants_name_service = 1;
+    } else if (domain == AF_SP_TOPOLOGY_RAW) {
+        domain = AF_SP_RAW;
         wants_name_service = 1;
     } else {
         wants_name_service = 0;
