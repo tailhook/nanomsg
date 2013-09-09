@@ -486,10 +486,11 @@ int nn_bind (int s, const char *addr)
 }
 
 static int nn_resolve (int s, const char *addr) {
-    char host[65];
+    char host_buf[65];
     char request_buf[256];
     char *nsaddr;
     char *appname;
+    char *host;
     char *reply;
     char *replyaddr;
     char reply_line[1024];
@@ -504,8 +505,12 @@ static int nn_resolve (int s, const char *addr) {
         errno_assert (rc >= 0);
     }
     // A very dirty (BLOCKING!) way
-    rc = gethostname (host, sizeof(host));
-    errno_assert (rc >= 0);
+    host = getenv("NN_OVERRIDE_HOSTNAME");
+    if (!host) {
+        rc = gethostname (host_buf, sizeof(host_buf));
+        errno_assert (rc >= 0);
+        host = host_buf;
+    }
     appname = getenv("NN_APPLICATION_NAME");
     if (!appname) {
         appname = (char *)getauxval(AT_EXECFN);
