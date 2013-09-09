@@ -461,8 +461,14 @@ nanocat_SOURCES = \
 	tools/options.c \
 	tools/options.h
 
+nanodev_SOURCES = \
+	tools/nanodev.c \
+	tools/options.c \
+	tools/options.h
+
 if NANOCAT
 bin_PROGRAMS += nanocat
+bin_PROGRAMS += nanodev
 endif NANOCAT
 
 ################################################################################
