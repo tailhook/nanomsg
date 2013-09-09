@@ -21,6 +21,10 @@
     IN THE SOFTWARE.
 */
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/auxv.h>
+
 #include "../nn.h"
 #include "../transport.h"
 #include "../protocol.h"
@@ -45,6 +49,7 @@
 #include "../transports/ipc/ipc.h"
 #include "../transports/tcp/tcp.h"
 
+#include "../reqrep.h"
 #include "../protocols/pair/pair.h"
 #include "../protocols/pair/xpair.h"
 #include "../protocols/pubsub/pub.h"
@@ -114,10 +119,16 @@ struct nn_global {
 
     /*  Pool of worker threads. */
     struct nn_pool pool;
+
+
+    /*  The socket number to use for name service queries  */
+    int name_service_socket;
 };
 
 /*  Singleton object containing the global state of the library. */
-static struct nn_global self = {0};
+static struct nn_global self = {
+    .name_service_socket = -1
+    };
 
 /*  Context creation- and termination-related private functions. */
 static void nn_global_init (void);
@@ -474,6 +485,62 @@ int nn_bind (int s, const char *addr)
     return rc;
 }
 
+static int nn_resolve (int s, const char *addr) {
+    char host[65];
+    char request_buf[256];
+    char *nsaddr;
+    char *appname;
+    char *reply;
+    char *replyaddr;
+    char reply_line[1024];
+    int rc;
+    int request_len;
+
+    if (self.name_service_socket < 0) {
+        nsaddr = getenv ("NN_NAME_SERVICE");
+        nn_assert (("NN_NAME_SERVICE must be define", nsaddr));
+        self.name_service_socket = nn_socket (AF_SP, NN_REQ);
+        rc = nn_connect (self.name_service_socket, nsaddr);
+        errno_assert (rc >= 0);
+    }
+    // A very dirty (BLOCKING!) way
+    rc = gethostname (host, sizeof(host));
+    errno_assert (rc >= 0);
+    appname = getenv("NN_APPLICATION_NAME");
+    if (!appname) {
+        appname = (char *)getauxval(AT_EXECFN);
+    }
+    request_len = snprintf(request_buf, sizeof(request_buf),
+        "REQUEST %s %s %s", host, appname, addr);
+    nn_assert(("Address too long", request_len < sizeof(request_buf)));
+    rc = nn_send (self.name_service_socket, request_buf, request_len, 0);
+    errno_assert (rc == request_len);
+    rc = nn_recv (self.name_service_socket, &reply, NN_MSG, 0);
+    errno_assert (rc >= 0);
+
+    FILE *f = fmemopen (reply, rc, "rb");
+    errno_assert (f != NULL);
+    while (fgets (reply_line, sizeof (reply_line), f) != NULL) {
+        if (sscanf (reply_line, "bind:%ms", &replyaddr) == 1) {
+            rc = nn_global_create_ep (s, replyaddr, 1);
+            if (rc < 0)
+                return rc;
+        } else if (sscanf (reply_line, "connect:%ms", &replyaddr)) {
+            rc = nn_global_create_ep (s, replyaddr, 0);
+            if (rc < 0)
+                return rc;
+        } else {
+            nn_assert (!"Wrong address returned");
+        }
+
+        free(replyaddr);
+    }
+    fclose(f);
+
+    nn_freemsg(reply);
+    return 0;
+}
+
 int nn_connect (int s, const char *addr)
 {
     int rc;
@@ -481,13 +548,13 @@ int nn_connect (int s, const char *addr)
     NN_BASIC_CHECKS;
 
     if (self.socks [s]->wants_name_service) {
-        nn_assert(("HELLO", 0));
+        rc = nn_resolve(s, addr);
     } else {
         rc = nn_global_create_ep (s, addr, 0);
-        if (rc < 0) {
-            errno = -rc;
-            return -1;
-        }
+    }
+    if (rc < 0) {
+        errno = -rc;
+        return -1;
     }
 
     return rc;
