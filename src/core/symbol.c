@@ -48,6 +48,7 @@ static const struct sym_value_name sym_value_names [] = {
     {AF_SP, "AF_SP"},
     {AF_SP_RAW, "AF_SP_RAW"},
     {AF_SP_TOPOLOGY, "AF_SP_TOPOLOGY"},
+    {AF_SP_TOPOLOGY_RAW, "AF_SP_TOPOLOGY_RAW"},
 
     {NN_INPROC, "NN_INPROC"},
     {NN_IPC, "NN_IPC"},
