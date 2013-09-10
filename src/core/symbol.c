@@ -144,3 +144,13 @@ const char *nn_symbol (int i, int *value)
     return svn->name;
 }
 
+const char *nn_lookup_symbol(int value) {
+    int i;
+
+    for(i = 0; i < SYM_VALUE_NAMES_LEN; ++i) {
+        if(value == sym_value_names [i].value)
+            return sym_value_names [i].name;
+    }
+    return NULL;
+}
+

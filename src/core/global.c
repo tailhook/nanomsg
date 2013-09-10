@@ -32,6 +32,7 @@
 #include "global.h"
 #include "sock.h"
 #include "ep.h"
+#include "symbol.h"
 
 #include "../aio/pool.h"
 
@@ -518,8 +519,9 @@ static int nn_resolve (int s, const char *addr) {
     if (!appname) {
         appname = (char *)getauxval(AT_EXECFN);
     }
-    request_len = snprintf(request_buf, sizeof(request_buf),
-        "REQUEST %s %s %s", host, appname, addr);
+    request_len = snprintf (request_buf, sizeof (request_buf),
+        "REQUEST %s %s %s %s", host, appname, addr,
+        nn_lookup_symbol (self.socks [s]->socktype->protocol));
     nn_assert(("Address too long", request_len < sizeof(request_buf)));
     rc = nn_send (self.name_service_socket, request_buf, request_len, 0);
     errno_assert (rc == request_len);
