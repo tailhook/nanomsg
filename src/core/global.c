@@ -500,6 +500,7 @@ static int nn_resolve (int s, const char *addr) {
     char reply_line[1024];
     int rc;
     int request_len;
+    int priority;
 
     if (self.name_service_socket < 0) {
         nsaddr = getenv ("NN_NAME_SERVICE");
@@ -531,11 +532,13 @@ static int nn_resolve (int s, const char *addr) {
     FILE *f = fmemopen (reply, rc, "rb");
     errno_assert (f != NULL);
     while (fgets (reply_line, sizeof (reply_line), f) != NULL) {
-        if (sscanf (reply_line, "bind:%ms", &replyaddr) == 1) {
+        if (sscanf (reply_line, "bind:%d:%ms", &priority, &replyaddr) == 2) {
+            self.socks [s]->sndprio = priority;
             rc = nn_global_create_ep (s, replyaddr, 1);
             if (rc < 0)
                 return rc;
-        } else if (sscanf (reply_line, "connect:%ms", &replyaddr)) {
+        } else if (sscanf (reply_line, "connect:%d:%ms", &priority, &replyaddr)) {
+            self.socks [s]->sndprio = priority;
             rc = nn_global_create_ep (s, replyaddr, 0);
             if (rc < 0)
                 return rc;
