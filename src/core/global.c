@@ -28,6 +28,7 @@
 #include "../nn.h"
 #include "../transport.h"
 #include "../protocol.h"
+#include "../utils/sleep.h"
 
 #include "global.h"
 #include "sock.h"
@@ -537,11 +538,13 @@ static int nn_resolve (int s, const char *addr) {
             rc = nn_global_create_ep (s, replyaddr, 1);
             if (rc < 0)
                 return rc;
+            nn_sleep(100);  // So that worker thread apply priority
         } else if (sscanf (reply_line, "connect:%d:%ms", &priority, &replyaddr)) {
             self.socks [s]->sndprio = priority;
             rc = nn_global_create_ep (s, replyaddr, 0);
             if (rc < 0)
                 return rc;
+            nn_sleep(100);  // So that worker thread apply priority
         } else {
             nn_assert (!"Wrong address returned");
         }
