@@ -52,8 +52,22 @@ Socket Options
 
 NN_TCP_NODELAY::
     This option, when set to 1, disables Nagle's algorithm. It also disables
-    delaying of TCP acknowledgments. Using this option improves latency at
-    the expense of throughput. Type of this option is int. Default value is 0.
+    delaying of TCP acknowledgments. Using this option improves latency at the
+    expense of throughput. Type of this option is int. Default value is 0.
+NN_TCP_KEEPIDLE::
+    The time the connection needs to remain idle before TCP starts sending
+    keepalive probes, if the NN_KEEPALIVE is enabled.  Type of this option is
+    int expressed in seconds. Default value is -1 (keep OS default). Ignored
+    if OS doesn't support TCP_KEEPIDLE socket option.
+NN_TCP_KEEPINTVL::
+    The time between keepalive probes, if the NN_KEEPALIVE is enabled.  Type of
+    this option is int expressed in seconds. Default value is -1 (keep OS
+    default). Ignored if OS doesn't support TCP_KEEPINTVL socket option.
+NN_TCP_KEEPCNT::
+    The maximum number of keepalive probes TCP should send before dropping the
+    connection, if the NN_KEEPALIVE is enabled.  Type of this option is int
+    expressed in seconds. Default value is -1 (keep OS default). Ignored if OS
+    doesn't support TCP_KEEPCNT socket option.
 
 
 EXAMPLE

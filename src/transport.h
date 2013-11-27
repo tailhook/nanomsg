@@ -173,6 +173,7 @@ struct nn_ep_options
     int ipv4only;
     int sndbuf;
     int rcvbuf;
+    int keepalive;
 };
 
 /*  The member of this structure are used internally by the core. Never use

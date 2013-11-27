@@ -336,6 +336,11 @@ static int nn_sock_setopt_inner (struct nn_sock *self, int level,
                 return -EINVAL;
             dst = &self->ep_template.ipv4only;
             break;
+        case NN_KEEPALIVE:
+            if (nn_slow (val != 0 && val != 1) )
+                return -EINVAL;
+            dst = &self->ep_template.keepalive;
+            break;
         default:
             return -ENOPROTOOPT;
         }
@@ -427,6 +432,9 @@ int nn_sock_getopt_inner (struct nn_sock *self, int level,
             strncpy (optval, self->socket_name, *optvallen);
             *optvallen = strlen(self->socket_name);
             return 0;
+        case NN_KEEPALIVE:
+            intval = self->ep_template.keepalive;
+            break;
         default:
             return -ENOPROTOOPT;
         }
@@ -440,7 +448,7 @@ int nn_sock_getopt_inner (struct nn_sock *self, int level,
 
     /*  Protocol-specific socket options. */
     if (level > NN_SOL_SOCKET)
-        return rc = self->sockbase->vfptr->getopt (self->sockbase,
+        return self->sockbase->vfptr->getopt (self->sockbase,
             level, option, optval, optvallen);
 
     /*  Transport-specific options. */

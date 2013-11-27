@@ -30,6 +30,9 @@ extern "C" {
 #define NN_TCP -3
 
 #define NN_TCP_NODELAY 1
+#define NN_TCP_KEEPIDLE 2
+#define NN_TCP_KEEPINTVL 3
+#define NN_TCP_KEEPCNT 4
 
 #ifdef __cplusplus
 }
