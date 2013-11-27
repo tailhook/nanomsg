@@ -1131,7 +1131,12 @@ struct nn_transport *nn_global_transport (int id)
 
     /*  Find the specified protocol. */
     tp = NULL;
+    /*
+    We think that after nn_transport_init the list of transports is immutable
+    so it's save to traverse without global lock
+
     nn_glock_lock ();
+    */
     for (it = nn_list_begin (&self.transports);
           it != nn_list_end (&self.transports);
           it = nn_list_next (&self.transports, it)) {
@@ -1140,7 +1145,11 @@ struct nn_transport *nn_global_transport (int id)
             break;
         tp = NULL;
     }
+    /*
+    Don't lock anymore. See above
+
     nn_glock_unlock ();
+    */
 
     return tp;
 }
