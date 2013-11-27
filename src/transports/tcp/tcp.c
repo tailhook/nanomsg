@@ -101,7 +101,7 @@ static struct nn_optset *nn_tcp_optset ()
     /*  Default values for TCP socket options. */
     optset->nodelay = 0;
 
-    return &optset->base;   
+    return &optset->base;
 }
 
 static void nn_tcp_optset_destroy (struct nn_optset *self)
@@ -155,5 +155,23 @@ static int nn_tcp_optset_getopt (struct nn_optset *self, int option,
         *optvallen < sizeof (int) ? *optvallen : sizeof (int));
     *optvallen = sizeof (int);
     return 0;
+}
+
+void nn_tcp_set_options(struct nn_epbase *source, struct nn_usock *sock)
+{
+    int val;
+    size_t sz;
+
+    sz = sizeof (val);
+    nn_epbase_getopt (source, NN_SOL_SOCKET, NN_SNDBUF, &val, &sz);
+    nn_assert (sz == sizeof (val));
+    nn_usock_setsockopt (sock, SOL_SOCKET, SO_SNDBUF,
+        &val, sizeof (val));
+
+    sz = sizeof (val);
+    nn_epbase_getopt (source, NN_SOL_SOCKET, NN_RCVBUF, &val, &sz);
+    nn_assert (sz == sizeof (val));
+    nn_usock_setsockopt (sock, SOL_SOCKET, SO_RCVBUF,
+        &val, sizeof (val));
 }
 

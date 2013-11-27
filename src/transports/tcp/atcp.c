@@ -20,6 +20,7 @@
     IN THE SOFTWARE.
 */
 
+#include "tcp.h"
 #include "atcp.h"
 
 #include "../../utils/err.h"
@@ -181,19 +182,7 @@ static void nn_atcp_handler (struct nn_fsm *self, int src, int type,
             case NN_USOCK_ACCEPTED:
                 nn_epbase_clear_error (atcp->epbase);
 
-                /*  Set the relevant socket options. */
-                sz = sizeof (val);
-                nn_epbase_getopt (atcp->epbase, NN_SOL_SOCKET, NN_SNDBUF,
-                    &val, &sz);
-                nn_assert (sz == sizeof (val));
-                nn_usock_setsockopt (&atcp->usock, SOL_SOCKET, SO_SNDBUF,
-                    &val, sizeof (val));
-                sz = sizeof (val);
-                nn_epbase_getopt (atcp->epbase, NN_SOL_SOCKET, NN_RCVBUF,
-                    &val, &sz);
-                nn_assert (sz == sizeof (val));
-                nn_usock_setsockopt (&atcp->usock, SOL_SOCKET, SO_RCVBUF,
-                    &val, sizeof (val));
+                nn_tcp_set_options(atcp->epbase, &atcp->usock);
 
                 /*  Return ownership of the listening socket to the parent. */
                 nn_usock_swap_owner (atcp->listener, &atcp->listener_owner);

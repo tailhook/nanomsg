@@ -24,7 +24,10 @@
 #define NN_TCP_INCLUDED
 
 #include "../../transport.h"
+#include "../../aio/usock.h"
 
 extern struct nn_transport *nn_tcp;
+
+void nn_tcp_set_options(struct nn_epbase *source, struct nn_usock *sock);
 
 #endif

@@ -20,6 +20,7 @@
     IN THE SOFTWARE.
 */
 
+#include "tcp.h"
 #include "ctcp.h"
 #include "stcp.h"
 
@@ -602,17 +603,7 @@ static void nn_ctcp_start_connecting (struct nn_ctcp *self,
         return;
     }
 
-    /*  Set the relevant socket options. */
-    sz = sizeof (val);
-    nn_epbase_getopt (&self->epbase, NN_SOL_SOCKET, NN_SNDBUF, &val, &sz);
-    nn_assert (sz == sizeof (val));
-    nn_usock_setsockopt (&self->usock, SOL_SOCKET, SO_SNDBUF,
-        &val, sizeof (val));
-    sz = sizeof (val);
-    nn_epbase_getopt (&self->epbase, NN_SOL_SOCKET, NN_RCVBUF, &val, &sz);
-    nn_assert (sz == sizeof (val));
-    nn_usock_setsockopt (&self->usock, SOL_SOCKET, SO_RCVBUF,
-        &val, sizeof (val));
+    nn_tcp_set_options(&self->epbase, &self->usock);
 
     /*  Bind the socket to the local network interface. */
     rc = nn_usock_bind (&self->usock, (struct sockaddr*) &local, locallen);
