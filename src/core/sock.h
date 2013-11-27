@@ -80,8 +80,6 @@ struct nn_sock
 
     /*  Socket-level socket options. */
     int linger;
-    int sndbuf;
-    int rcvbuf;
     int sndtimeo;
     int rcvtimeo;
     int reconnect_ivl;

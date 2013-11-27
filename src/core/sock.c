@@ -118,12 +118,12 @@ int nn_sock_init (struct nn_sock *self, struct nn_socktype *socktype, int fd)
 
     /*  Default values for NN_SOL_SOCKET options. */
     self->linger = 1000;
-    self->sndbuf = 128 * 1024;
-    self->rcvbuf = 128 * 1024;
     self->sndtimeo = -1;
     self->rcvtimeo = -1;
     self->reconnect_ivl = 100;
     self->reconnect_ivl_max = 0;
+    self->ep_template.sndbuf = 128 * 1024;
+    self->ep_template.rcvbuf = 128 * 1024;
     self->ep_template.sndprio = 8;
     self->ep_template.ipv4only = 1;
 
@@ -303,12 +303,12 @@ static int nn_sock_setopt_inner (struct nn_sock *self, int level,
         case NN_SNDBUF:
             if (nn_slow (val <= 0))
                 return -EINVAL;
-            dst = &self->sndbuf;
+            dst = &self->ep_template.sndbuf;
             break;
         case NN_RCVBUF:
             if (nn_slow (val <= 0))
                 return -EINVAL;
-            dst = &self->rcvbuf;
+            dst = &self->ep_template.rcvbuf;
             break;
         case NN_SNDTIMEO:
             dst = &self->sndtimeo;
@@ -384,10 +384,10 @@ int nn_sock_getopt_inner (struct nn_sock *self, int level,
             intval = self->linger;
             break;
         case NN_SNDBUF:
-            intval = self->sndbuf;
+            intval = self->ep_template.sndbuf;
             break;
         case NN_RCVBUF:
-            intval = self->rcvbuf;
+            intval = self->ep_template.rcvbuf;
             break;
         case NN_SNDTIMEO:
             intval = self->sndtimeo;

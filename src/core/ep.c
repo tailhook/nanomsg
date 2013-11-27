@@ -131,6 +131,26 @@ void nn_ep_getopt (struct nn_ep *self, int level, int option,
     void *optval, size_t *optvallen)
 {
     int rc;
+    int intval;
+
+    switch(level) {
+    case NN_SOL_SOCKET:
+        switch(option) {
+        case NN_RCVBUF:
+            intval = self->options.rcvbuf;
+            memcpy (optval, &intval,
+                *optvallen < sizeof (int) ? *optvallen : sizeof (int));
+            *optvallen = sizeof (int);
+            break;
+        case NN_SNDBUF:
+            intval = self->options.sndbuf;
+            memcpy (optval, &intval,
+                *optvallen < sizeof (int) ? *optvallen : sizeof (int));
+            *optvallen = sizeof (int);
+            break;
+        }
+        break;
+    }
 
     rc = nn_sock_getopt_inner (self->sock, level, option, optval, optvallen);
     errnum_assert (rc == 0, -rc);
